@@ -40,7 +40,7 @@ pub async fn handle(cmd: Connect) -> Result<ConnectResponse> {
             label: "Password".to_string(),
             field_type: FieldType::Password,
             required: true,
-            help: Some("The password is used only to create a session.".to_string()),
+            help: None,
         },
     ];
     Ok(ConnectResponse::NeedsInput {

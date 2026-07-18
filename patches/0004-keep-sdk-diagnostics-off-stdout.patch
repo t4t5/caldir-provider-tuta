@@ -1,0 +1,12 @@
+--- a/sdk/src/type_model_provider.rs
++++ b/sdk/src/type_model_provider.rs
+@@ -207,7 +207,8 @@
+ 		let service_path = ApplicationTypesService::PATH;
+ 		let url = format!("{}/rest/{}", self.base_url, service_path);
+ 
+-		println!(
++		// Provider stdout is reserved for caldir's JSON RPC protocol.
++		log::debug!(
+ 			"Attempting to get base model version?  {}",
+ 			CLIENT_TYPE_MODEL
+ 				.apps
