@@ -1,3 +1,4 @@
+mod alarms;
 mod commands;
 mod constants;
 mod content;

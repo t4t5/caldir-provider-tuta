@@ -10,6 +10,7 @@ use tutasdk::entities::generated::tutanota::{CalendarEvent, CalendarGroupRoot};
 use tutasdk::rest_error::HttpError;
 use tutasdk::{ApiCallError, CustomId, GeneratedId, IdTupleCustom, ListLoadDirection, LoggedInSdk};
 
+use crate::alarms::{create_alarms, retain_other_users_alarms};
 use crate::constants::{DAYS_SHIFTED_MS, ITEM_UID_PROPERTY, LONG_EVENT_DURATION_MS};
 use crate::content::{item_ref, set_item_ref};
 use crate::mapping::from_caldir_event;
@@ -27,6 +28,7 @@ pub async fn create_event(
         .await
         .context("Failed to load Tuta calendar root")?;
     prepare_and_create(sdk, calendar_id, &group_root, &mut remote).await?;
+    create_alarms(sdk, &remote, &event.reminders).await?;
 
     if let Some(recurrence_id) = remote.recurrenceId {
         exclude_override_on_master(
@@ -81,13 +83,13 @@ pub async fn update_event(
             .context("Failed to remove old Tuta event while rescheduling")?;
         prepare_and_create(sdk, calendar_id, &group_root, &mut remote).await?;
     } else {
+        remote.alarmInfos = retain_other_users_alarms(sdk, &existing);
         remote._id = existing._id;
         remote._permissions = existing._permissions;
         remote._ownerGroup = existing._ownerGroup;
         remote._ownerEncSessionKey = existing._ownerEncSessionKey;
         remote._ownerKeyVersion = existing._ownerKeyVersion;
         remote._kdfNonce = existing._kdfNonce;
-        remote.alarmInfos = existing.alarmInfos;
         remote.invitedConfidentially = existing.invitedConfidentially;
         remote.sender = existing.sender;
         remote.pendingInvitation = existing.pendingInvitation;
@@ -96,6 +98,7 @@ pub async fn update_event(
             .await
             .context("Failed to update Tuta event")?;
     }
+    create_alarms(sdk, &remote, &event.reminders).await?;
 
     let new_id = remote
         ._id
@@ -231,7 +234,7 @@ pub fn element_id_for(start_ms: u64, shift_ms: i64) -> CustomId {
     CustomId::from_custom_string(&shifted.max(0).to_string())
 }
 
-fn random_event_element_id(start_ms: u64) -> CustomId {
+pub(crate) fn random_event_element_id(start_ms: u64) -> CustomId {
     let min_shift = -DAYS_SHIFTED_MS.min(i64::try_from(start_ms).unwrap_or(i64::MAX));
     element_id_for(
         start_ms,

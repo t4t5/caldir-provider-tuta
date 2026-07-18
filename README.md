@@ -52,7 +52,7 @@ The script recopies the three crates, reapplies the patch series, and records th
 ## Limitations
 
 - The live login and wire recipe require validation with a dedicated account after every SDK bump.
-- Tuta reminders are not mapped. In-place edits preserve them; rescheduling recreates the event and loses its Tuta-side reminders.
+- Reminder offsets are synchronized with the current Tuta user's encrypted alarm list. Tuta supports minute, hour, day, and week offsets before an event start.
 - Attendees, organizer details, invitations, birthday calendars, incremental sync, and calendar management are not implemented.
 - Floating date-times are stored as UTC wall time because Tuta stores instants rather than RFC 5545 floating times.
 - An outdated SDK may be rejected by Tuta when its pinned client version expires.

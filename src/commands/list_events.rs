@@ -7,6 +7,7 @@ use tutasdk::entities::generated::tutanota::{CalendarEvent, CalendarGroupRoot};
 use tutasdk::util::first_bigger_than_second_custom_id;
 use tutasdk::{CustomId, GeneratedId, ListLoadDirection, crypto_entity_client::CryptoEntityClient};
 
+use crate::alarms::load_reminders_for_events;
 use crate::constants::{DAYS_SHIFTED_MS, PROVIDER_NAME};
 use crate::content::set_item_ref;
 use crate::mapping::to_caldir_event;
@@ -32,13 +33,18 @@ pub async fn handle(cmd: ListEvents) -> Result<Vec<Event>> {
         load_event_list(&crypto, &root.shortEvents, short_start, Some(&short_end),),
         load_event_list(&crypto, &root.longEvents, CustomId(String::new()), None,),
     )?;
+    let sources: Vec<CalendarEvent> = short_events.into_iter().chain(long_events).collect();
+    let mut reminders_by_event = load_reminders_for_events(&sdk, &sources).await?;
     let mut events = Vec::new();
-    for source in short_events.into_iter().chain(long_events) {
+    for source in sources {
         let Some(id) = source._id.as_ref() else {
             eprintln!("caldir-provider-tuta: skipping event without an entity id");
             continue;
         };
-        let mut event = match to_caldir_event(&source) {
+        let reminders = reminders_by_event
+            .remove(&id.to_string())
+            .unwrap_or_default();
+        let mut event = match to_caldir_event(&source, reminders) {
             Ok(event) => event,
             Err(error) => {
                 eprintln!("caldir-provider-tuta: skipping malformed Tuta event {id}: {error}");

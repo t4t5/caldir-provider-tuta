@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::{Context, Result, bail};
-use caldir_core::{Event, EventTime, EventUid, Recurrence, RecurrenceId};
+use caldir_core::{Event, EventTime, EventUid, Recurrence, RecurrenceId, Reminder};
 use chrono::{DateTime as ChronoDateTime, Duration, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use tutasdk::date::DateTime;
 use tutasdk::entities::generated::sys::DateWrapper;
@@ -11,7 +11,7 @@ use tutasdk::entities::generated::tutanota::{
 
 const DAY_MS: u64 = 86_400_000;
 
-pub fn to_caldir_event(source: &CalendarEvent) -> Result<Event> {
+pub fn to_caldir_event(source: &CalendarEvent, reminders: Vec<Reminder>) -> Result<Event> {
     let all_day = is_all_day(source);
     let start = from_tuta_time(source.startTime, source.startTimeZone.as_deref(), all_day)?;
     let end = from_tuta_time(source.endTime, source.endTimeZone.as_deref(), all_day)?;
@@ -25,6 +25,7 @@ pub fn to_caldir_event(source: &CalendarEvent) -> Result<Event> {
     event.location = non_empty(&source.location);
     event.end = Some(end);
     event.sequence = i32::try_from(source.sequence).unwrap_or(i32::MAX);
+    event.reminders = reminders;
     event.recurrence_id = source
         .recurrenceId
         .map(|value| {
@@ -407,9 +408,11 @@ mod tests {
 
     #[test]
     fn maps_tuta_fields_and_recurrence() {
-        let event = to_caldir_event(&sample_tuta_event()).unwrap();
+        let reminders = vec![Reminder::from_minutes(120), Reminder::from_minutes(10)];
+        let event = to_caldir_event(&sample_tuta_event(), reminders.clone()).unwrap();
         assert_eq!(event.uid.as_str(), "standup@example.com");
         assert_eq!(event.summary.as_deref(), Some("Standup"));
+        assert_eq!(event.reminders, reminders);
         assert_eq!(
             event.recurrence.unwrap().rrule,
             "FREQ=WEEKLY;INTERVAL=1;COUNT=10;BYDAY=MO"
@@ -431,7 +434,7 @@ mod tests {
         );
         source.repeatRule = None;
         assert!(matches!(
-            to_caldir_event(&source).unwrap().start,
+            to_caldir_event(&source, Vec::new()).unwrap().start,
             EventTime::Date(_)
         ));
     }
@@ -466,7 +469,8 @@ mod tests {
         event
             .x_properties
             .push(XProperty::new("X-LOCAL", "kept-local"));
-        let restored = to_caldir_event(&from_caldir_event(&event).unwrap()).unwrap();
+        let restored =
+            to_caldir_event(&from_caldir_event(&event).unwrap(), event.reminders.clone()).unwrap();
         assert_eq!(restored.uid, event.uid);
         assert_eq!(restored.summary, event.summary);
         assert_eq!(

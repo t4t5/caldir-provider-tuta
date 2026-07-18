@@ -60,7 +60,11 @@ fn provider_crud_against_dedicated_account() -> Result<()> {
     assert!(created.contains("X-TUTA-ITEM:"));
 
     let listed = list_events(storage.path(), &remote)?;
-    assert!(listed.iter().any(|event| event.contains(&uid)));
+    let listed_event = listed
+        .iter()
+        .find(|event| event.contains(&uid))
+        .context("created event was not listed")?;
+    assert!(listed_event.contains("TRIGGER;RELATED=START:-PT10M"));
 
     let updated = event_rpc(
         storage.path(),
@@ -69,6 +73,12 @@ fn provider_crud_against_dedicated_account() -> Result<()> {
         &created.replace("SUMMARY:Created", "SUMMARY:Updated"),
     )?;
     assert!(updated.contains("SUMMARY:Updated"));
+    let listed = list_events(storage.path(), &remote)?;
+    let listed_event = listed
+        .iter()
+        .find(|event| event.contains(&uid))
+        .context("updated event was not listed")?;
+    assert!(listed_event.contains("TRIGGER;RELATED=START:-PT10M"));
 
     let rescheduled = event_rpc(
         storage.path(),
@@ -79,6 +89,12 @@ fn provider_crud_against_dedicated_account() -> Result<()> {
             .replace("20260718T110000Z", "20260718T130000Z"),
     )?;
     assert!(rescheduled.contains("20260718T120000Z"));
+    let listed = list_events(storage.path(), &remote)?;
+    let listed_event = listed
+        .iter()
+        .find(|event| event.contains(&uid))
+        .context("rescheduled event was not listed")?;
+    assert!(listed_event.contains("TRIGGER;RELATED=START:-PT10M"));
 
     event_rpc(storage.path(), "delete_event", &remote, &rescheduled)?;
     assert!(
@@ -91,7 +107,7 @@ fn provider_crud_against_dedicated_account() -> Result<()> {
 
 fn event_ics(uid: &str, summary: &str, start: &str, end: &str) -> String {
     format!(
-        "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:CALDIR\r\nBEGIN:VEVENT\r\nUID:{uid}\r\nDTSTART:{start}\r\nDTEND:{end}\r\nSUMMARY:{summary}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
+        "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:CALDIR\r\nBEGIN:VEVENT\r\nUID:{uid}\r\nDTSTART:{start}\r\nDTEND:{end}\r\nSUMMARY:{summary}\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nTRIGGER;RELATED=START:-PT10M\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
     )
 }
 
