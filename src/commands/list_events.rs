@@ -47,12 +47,6 @@ pub async fn handle(cmd: ListEvents) -> Result<Vec<Event>> {
         };
         set_item_ref(&mut event, &id.to_string());
         if event.recurrence.is_some() || event.occurs_in_range(from, to) {
-            if event.last_modified.is_none() {
-                eprintln!(
-                    "caldir-provider-tuta: event {} has no remote modification time",
-                    event.event_instance_id()
-                );
-            }
             events.push(event);
         }
     }

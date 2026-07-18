@@ -25,7 +25,7 @@ Enter the hosted service URL (or leave it empty), your Tuta email, and password.
 
 - `X-TUTA-ITEM` links a local VEVENT to Tuta's `<list-id>/<element-id>`.
 - Reads bypass the SDK's recurrence-expanding facade and load the underlying encrypted entities, preserving recurring masters and RRULEs.
-- Tuta exposes no per-event modification time. Pulled events therefore have no `LAST-MODIFIED`, making the remote copy authoritative during pull conflicts.
+- Tuta exposes no per-event modification time. Pulled events therefore have no `LAST-MODIFIED`; caldir uses its saved sync base and Tuta's `SEQUENCE` as the fallback direction signals.
 - Short and long event lists are selected using Tuta's rule: recurring or longer than 15 days means long.
 - Moving an event in time, moving calendars, or changing its short/long class deletes and recreates the entity with the same UID. Other edits update in place.
 - Recurrence overrides are separate entities and the master receives the matching excluded date.
@@ -60,4 +60,3 @@ The script recopies the three crates, reapplies the patch series, and records th
 ## License
 
 GPL-3.0-only.
-
