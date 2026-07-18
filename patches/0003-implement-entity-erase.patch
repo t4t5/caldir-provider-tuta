@@ -1,0 +1,58 @@
+--- a/sdk/src/entity_client.rs
++++ b/sdk/src/entity_client.rs
+@@ -348,20 +348,48 @@
+ 	#[allow(clippy::unused_async, unused)]
+ 	pub async fn erase_element(
+ 		&self,
+-		_type_ref: &TypeRef,
+-		_id: &GeneratedId,
++		type_ref: &TypeRef,
++		id: &GeneratedId,
+ 	) -> Result<(), ApiCallError> {
+-		todo!("entity client erase_element")
++		self.erase_instance(type_ref, id.to_string()).await
+ 	}
+ 
+ 	/// Deletes an existing entity/instance of a list element type on the backend
+ 	#[allow(clippy::unused_async, unused)]
+ 	pub async fn erase_list_element<Id: IdTupleType>(
+ 		&self,
+-		_type_ref: &TypeRef,
+-		_id: Id,
++		type_ref: &TypeRef,
++		id: Id,
++	) -> Result<(), ApiCallError> {
++		self.erase_instance(type_ref, id.to_string()).await
++	}
++
++	async fn erase_instance(
++		&self,
++		type_ref: &TypeRef,
++		id: String,
+ 	) -> Result<(), ApiCallError> {
+-		todo!("entity client erase_list_element")
++		let type_model = self.resolve_client_type_ref(type_ref)?;
++		let url = format!(
++			"{}/rest/{}/{}/{}",
++			self.base_url, type_ref.app, type_model.name, id
++		);
++		let options = RestClientOptions {
++			body: None,
++			headers: self.auth_headers_provider.provide_headers(type_model.version),
++			suspension_behavior: Some(SuspensionBehavior::Suspend),
++		};
++		let response = self
++			.rest_client
++			.request_binary(url, HttpMethod::DELETE, options)
++			.await?;
++		self.ensure_latest_server_model(&response).await?;
++		match response.status {
++			200..=299 => Ok(()),
++			_ => Err(ApiCallError::ServerResponseError {
++				source: HttpError::from_http_response(response.status, &response.headers)?,
++			}),
++		}
+ 	}
+ 
+ 	async fn prepare_and_fire(
+

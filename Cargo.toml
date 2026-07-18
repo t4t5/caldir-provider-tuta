@@ -1,0 +1,76 @@
+[package]
+name = "caldir-provider-tuta"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Tuta calendar provider for caldir"
+license = "GPL-3.0-only"
+repository = "https://github.com/t4t5/caldir-provider-tuta"
+homepage = "https://caldir.org"
+keywords = ["calendar", "tuta", "tutanota", "sync"]
+categories = ["command-line-utilities"]
+
+[workspace]
+resolver = "2"
+members = [
+    ".",
+    "vendor/tuta-sdk/sdk",
+    "vendor/tuta-sdk/crypto-primitives",
+    "vendor/tuta-sdk/util",
+]
+
+[workspace.package]
+version = "355.260710.0"
+rust-version = "1.84.0"
+edition = "2021"
+homepage = "https://tutao.de"
+repository = "https://github.com/tutao/tutanota"
+license-file = "vendor/tuta-sdk/LICENSE.txt"
+publish = false
+
+[workspace.dependencies]
+tuta-sdk = { path = "vendor/tuta-sdk/sdk", default-features = false }
+crypto-primitives = { path = "vendor/tuta-sdk/crypto-primitives", default-features = false }
+util = { path = "vendor/tuta-sdk/util", default-features = false }
+base64 = "0.22.1"
+log = "0.4.22"
+serde = { version = "1.0.210", features = ["derive", "rc"] }
+serde_json = "1.0.117"
+tokio = { version = "1.43", default-features = false }
+uniffi = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "13a1c559cb3708eeca40dcf95dc8b3ccccf3b88c", default-features = false }
+rand = "0.8"
+
+[workspace.lints.clippy]
+new_without_default = "allow"
+enum_variant_names = "allow"
+let_and_return = "allow"
+too_many_arguments = "allow"
+manual_let_else = "warn"
+must_use_candidate = "warn"
+unused_async = "warn"
+implicit_clone = "warn"
+explicit_iter_loop = "warn"
+
+[[bin]]
+name = "caldir-provider-tuta"
+path = "src/main.rs"
+
+[dependencies]
+caldir-core = "0.11.2"
+tuta-sdk = { path = "vendor/tuta-sdk/sdk", features = ["net"] }
+crypto-primitives = { path = "vendor/tuta-sdk/crypto-primitives", default-features = false }
+async-trait = "0.1"
+tokio = { version = "1", features = ["rt", "macros"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+toml = "1"
+url = "2"
+base64 = "0.22"
+rand = "0.9"
+
+[dev-dependencies]
+tempfile = "3"
+

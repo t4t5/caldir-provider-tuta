@@ -1,0 +1,25 @@
+--- a/sdk/src/entity_client.rs
++++ b/sdk/src/entity_client.rs
+@@ -235,6 +235,10 @@
+ 			.clone();
+ 
+ 		let mut raw_entity = self.json_serializer.serialize(type_ref, parsed_entity)?;
++		let has_custom_id = matches!(
++			entity_id,
++			ElementValue::IdCustomId(_) | ElementValue::IdTupleCustomElementId(_)
++		);
+ 		let (list_id, element_id) = extract_parsed_entity_id(type_ref, entity_id);
+ 
+ 		if let Some(list_id) = list_id {
+@@ -252,7 +256,9 @@
+ 			})?;
+ 
+ 		if request_type == HttpMethod::POST {
+-			raw_entity.insert(id_field_attribute_id, JsonElement::Null);
++			if !has_custom_id {
++				raw_entity.insert(id_field_attribute_id, JsonElement::Null);
++			}
+ 			raw_entity.insert(permissions_field_attribute_id, JsonElement::Null);
+ 		} else {
+ 			request_url.push('/');
+
