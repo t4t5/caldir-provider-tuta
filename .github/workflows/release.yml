@@ -49,9 +49,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Rust toolchain
+        id: rust
+        shell: bash
+        run: |
+          channel=$(awk -F '"' '/^channel =/ { print $2; exit }' rust-toolchain.toml)
+          echo "channel=${channel}" >> "$GITHUB_OUTPUT"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: ${{ steps.rust.outputs.channel }}
           targets: ${{ matrix.target }}
 
       - name: Build
