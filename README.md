@@ -4,6 +4,8 @@ A [caldir](https://caldir.org) provider for [Tuta Calendar](https://tuta.com/cal
 
 ## Install
 
+Clone the repo and install the binary:
+
 ```bash
 cargo install --path .
 ```
