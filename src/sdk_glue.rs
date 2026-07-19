@@ -7,9 +7,10 @@ use tutasdk::login::LoginError;
 use tutasdk::net::native_rest_client::NativeRestClient;
 use tutasdk::{LoggedInSdk, Sdk};
 
+use crate::constants::TUTA_SERVER_URL;
 use crate::session::Session;
 
-pub fn make_sdk(base_url: &str, storage: &ProviderStorage) -> Result<Sdk> {
+pub fn make_sdk(storage: &ProviderStorage) -> Result<Sdk> {
     let model_cache = storage.root().join("model-cache");
     std::fs::create_dir_all(&model_cache)
         .with_context(|| format!("Failed to create {}", model_cache.display()))?;
@@ -17,14 +18,14 @@ pub fn make_sdk(base_url: &str, storage: &ProviderStorage) -> Result<Sdk> {
     let file_client =
         NativeFileClient::try_new(model_cache).context("Failed to initialize Tuta model cache")?;
     Ok(Sdk::new(
-        base_url.trim_end_matches('/').to_string(),
+        TUTA_SERVER_URL.to_string(),
         Arc::new(rest_client),
         Arc::new(file_client),
     ))
 }
 
 pub async fn login(session: &Session, storage: &ProviderStorage) -> Result<Arc<LoggedInSdk>> {
-    let sdk = make_sdk(&session.base_url, storage)?;
+    let sdk = make_sdk(storage)?;
     sdk.login(session.credentials()?)
         .await
         .map_err(actionable_login_error)

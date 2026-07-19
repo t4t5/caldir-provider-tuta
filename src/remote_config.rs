@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn round_trips() {
-        let original = TutaRemoteConfig::new("alice@tuta.com@mail.tutanota.com", "group-id");
+        let original = TutaRemoteConfig::new("alice@tuta.com", "group-id");
         let restored =
             TutaRemoteConfig::try_from(&original.clone().into_remote_config_params()).unwrap();
         assert_eq!(restored.tuta_account, original.tuta_account);

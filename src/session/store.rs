@@ -15,7 +15,7 @@ impl SessionStore {
     }
 
     pub fn save(&self, session: &Session) -> Result<()> {
-        let path = self.path_for(&session.email, &session.base_url);
+        let path = self.path_for(&session.email);
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).with_context(|| {
                 format!("Failed to create session directory: {}", parent.display())
@@ -34,34 +34,23 @@ impl SessionStore {
     }
 
     pub fn load(&self, account_identifier: &str) -> Result<Session> {
-        let session_dir = self.session_dir();
-        if session_dir.exists() {
-            for entry in std::fs::read_dir(&session_dir)? {
-                let path = entry?.path();
-                if path.extension().and_then(|ext| ext.to_str()) != Some("toml") {
-                    continue;
-                }
-                let contents = std::fs::read_to_string(&path)?;
-                if let Ok(session) = toml::from_str::<Session>(&contents)
-                    && Session::account_identifier(&session.email, &session.base_url)
-                        == account_identifier
-                {
-                    return Ok(session);
-                }
-            }
-        }
-        anyhow::bail!(
-            "Tuta session for {account_identifier} not found - run `caldir connect tuta` again"
-        )
+        let path = self.path_for(account_identifier);
+        let contents = std::fs::read_to_string(&path).with_context(|| {
+            format!(
+                "Tuta session for {account_identifier} not found - run `caldir connect tuta` again"
+            )
+        })?;
+        toml::from_str(&contents)
+            .with_context(|| format!("Failed to read Tuta session from {}", path.display()))
     }
 
     fn session_dir(&self) -> PathBuf {
         self.storage.root().join("session")
     }
 
-    fn path_for(&self, email: &str, base_url: &str) -> PathBuf {
+    fn path_for(&self, email: &str) -> PathBuf {
         self.session_dir()
-            .join(format!("{}.toml", Session::slug(email, base_url)))
+            .join(format!("{}.toml", Session::slug(email)))
     }
 }
 
@@ -73,17 +62,13 @@ mod tests {
     use tutasdk::login::{CredentialType, Credentials};
 
     fn sample_session() -> Session {
-        Session::from_credentials(
-            "https://mail.tutanota.com",
-            "alice@tuta.com",
-            &Credentials {
-                login: "alice@tuta.com".to_string(),
-                user_id: GeneratedId("user-id".to_string()),
-                access_token: "token".to_string(),
-                encrypted_passphrase_key: vec![1, 2, 3],
-                credential_type: CredentialType::Internal,
-            },
-        )
+        Session::from_credentials(&Credentials {
+            login: "alice@tuta.com".to_string(),
+            user_id: GeneratedId("user-id".to_string()),
+            access_token: "token".to_string(),
+            encrypted_passphrase_key: vec![1, 2, 3],
+            credential_type: CredentialType::Internal,
+        })
     }
 
     #[test]
@@ -92,12 +77,7 @@ mod tests {
         let store = SessionStore::new(ProviderStorage::new(tmp.path()));
         let session = sample_session();
         store.save(&session).unwrap();
-        let loaded = store
-            .load(&Session::account_identifier(
-                &session.email,
-                &session.base_url,
-            ))
-            .unwrap();
+        let loaded = store.load(&session.email).unwrap();
         assert_eq!(loaded.access_token, "token");
     }
 
@@ -109,7 +89,7 @@ mod tests {
         let store = SessionStore::new(ProviderStorage::new(tmp.path()));
         let session = sample_session();
         store.save(&session).unwrap();
-        let path = store.path_for(&session.email, &session.base_url);
+        let path = store.path_for(&session.email);
         assert_eq!(
             std::fs::metadata(path).unwrap().permissions().mode() & 0o777,
             0o600

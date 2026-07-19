@@ -6,7 +6,6 @@ use tutasdk::login::{CredentialType, Credentials};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Session {
-    pub base_url: String,
     pub email: String,
     pub user_id: String,
     pub access_token: String,
@@ -15,14 +14,9 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn from_credentials(
-        base_url: impl Into<String>,
-        email: impl Into<String>,
-        credentials: &Credentials,
-    ) -> Self {
+    pub fn from_credentials(credentials: &Credentials) -> Self {
         Self {
-            base_url: base_url.into(),
-            email: email.into(),
+            email: credentials.login.clone(),
             user_id: credentials.user_id.to_string(),
             access_token: credentials.access_token.clone(),
             encrypted_passphrase_key: base64::engine::general_purpose::STANDARD
@@ -52,16 +46,8 @@ impl Session {
         })
     }
 
-    pub(super) fn slug(email: &str, base_url: &str) -> String {
-        Self::account_identifier(email, base_url).replace(['/', '\\', ':', '@', '.'], "_")
-    }
-
-    pub fn account_identifier(email: &str, base_url: &str) -> String {
-        let host = url::Url::parse(base_url)
-            .ok()
-            .and_then(|url| url.host_str().map(str::to_string))
-            .unwrap_or_else(|| "unknown".to_string());
-        format!("{email}@{host}")
+    pub(super) fn slug(email: &str) -> String {
+        email.replace(['/', '\\', ':', '@', '.'], "_")
     }
 }
 
@@ -81,22 +67,10 @@ mod tests {
 
     #[test]
     fn credentials_round_trip() {
-        let session = Session::from_credentials(
-            "https://mail.tutanota.com",
-            "alice@tuta.com",
-            &credentials(),
-        );
+        let session = Session::from_credentials(&credentials());
         let restored = session.credentials().unwrap();
         assert_eq!(restored.login, "alice@tuta.com");
         assert_eq!(restored.user_id.to_string(), "user-id");
         assert_eq!(restored.encrypted_passphrase_key, vec![1, 2, 3]);
-    }
-
-    #[test]
-    fn account_identifier_uses_email_and_host() {
-        assert_eq!(
-            Session::account_identifier("alice@tuta.com", "https://mail.tutanota.com"),
-            "alice@tuta.com@mail.tutanota.com"
-        );
     }
 }

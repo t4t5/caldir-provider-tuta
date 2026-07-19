@@ -19,7 +19,8 @@ cargo install --path .
 caldir connect tuta
 ```
 
-Enter the hosted service URL (or leave it empty), your Tuta email, and password.
+Enter your Tuta email and password. The provider connects to Tuta's hosted service at
+`https://app.tuta.com`.
 
 ## Sync behavior
 

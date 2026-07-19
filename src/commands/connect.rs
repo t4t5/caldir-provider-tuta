@@ -4,25 +4,24 @@ use caldir_core::rpc::{
     Connect, ConnectResponse, ConnectStepKind, CredentialField, CredentialsData, FieldType,
 };
 
-use crate::constants::{DEFAULT_SERVER_URL, PROVIDER_NAME};
+use crate::constants::PROVIDER_NAME;
 use crate::sdk_glue::make_sdk;
 use crate::session::{Session, SessionStore};
 
 pub async fn handle(cmd: Connect) -> Result<ConnectResponse> {
     if cmd.data.contains_key("email") {
-        let base_url = DEFAULT_SERVER_URL.to_string();
         let email = required_credential(&cmd, "email")?.to_string();
         let passphrase = required_credential(&cmd, "passphrase")?.to_string();
         let storage = ProviderStorage::for_provider(PROVIDER_NAME)?;
-        let sdk = make_sdk(&base_url, &storage)?;
+        let sdk = make_sdk(&storage)?;
         let logged_in = sdk
             .create_session(&email, &passphrase)
             .await
             .map_err(|error| anyhow::anyhow!("Failed to log in to Tuta: {error}"))?;
-        let session = Session::from_credentials(&base_url, &email, &logged_in.credentials());
+        let session = Session::from_credentials(&logged_in.credentials());
         SessionStore::new(storage).save(&session)?;
         return Ok(ConnectResponse::Done {
-            account_identifier: Some(Session::account_identifier(&email, &base_url)),
+            account_identifier: Some(email),
             calendars: None,
         });
     }
