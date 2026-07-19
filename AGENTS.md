@@ -10,7 +10,8 @@
 
 ## Updating the SDK
 
-The provider uses a patched copy of Tuta's undocumented Rust SDK.
+The provider uses a patched copy of Tuta's undocumented [Rust
+SDK](https://github.com/tutao/tutanota/blob/master/tuta-sdk/rust/README.md).
 
 The three upstream crates and GPL license are under `vendor/tuta-sdk`. The local changes are recorded in `patches/`:
 
