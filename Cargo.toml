@@ -56,7 +56,7 @@ name = "caldir-provider-tuta"
 path = "src/main.rs"
 
 [dependencies]
-caldir-core = "0.11.2"
+caldir-core = "0.16.0"
 tuta-sdk = { path = "vendor/tuta-sdk/sdk", features = ["net"] }
 crypto-primitives = { path = "vendor/tuta-sdk/crypto-primitives", default-features = false }
 async-trait = "0.1"

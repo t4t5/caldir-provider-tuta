@@ -269,9 +269,9 @@ checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
 
 [[package]]
 name = "caldir-core"
-version = "0.11.2"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c34c0df7cd56fb867ee29688ca83590c30348f2a1f7956f97712e158ee739aaf"
+checksum = "d924755babb8a2a14e64e55143bcb4107efabc0ea662d353fd0418028e72bb7d"
 dependencies = [
  "async-trait",
  "chrono",
@@ -285,7 +285,9 @@ dependencies = [
  "rrule",
  "serde",
  "serde_json",
+ "sha2",
  "slug",
+ "strum",
  "tempfile",
  "thiserror 2.0.18",
  "tokio",
@@ -2422,6 +2424,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "strum"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
+dependencies = [
+ "strum_macros",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3239,6 +3262,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53bce119c4ac0adfe0945781383966cc9838c853c2876fa3bf71662d76df4ef2"
 dependencies = [
  "chrono-tz",
+ "strum",
 ]
 
 [[package]]
