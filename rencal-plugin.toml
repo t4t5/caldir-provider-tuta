@@ -1,5 +1,5 @@
 id = "t4t5.tuta"
-name = "Tuta"
+name = "Tuta Provider"
 version = "0.1.0"
 description = "Sync your Tuta calendars with renCal"
 min_rencal_version = "0.8.0"
