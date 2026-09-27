@@ -1,0 +1,12 @@
+id = "t4t5.tuta"
+name = "Tuta"
+version = "0.1.0"
+description = "Sync your Tuta calendars with renCal"
+min_rencal_version = "0.8.0"
+
+[[contributes.providers]]
+id = "tuta"
+name = "Tuta"
+icon = "icons/tuta.svg"
+asset = "caldir-provider-tuta-{target}.tar.gz"
+caldir_core = "0.16.0"
