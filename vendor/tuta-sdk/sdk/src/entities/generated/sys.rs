@@ -730,6 +730,8 @@ pub struct CustomerInfo {
 	pub confirmedHuman: bool,
 	#[serde(rename = "2732")]
 	pub adAttributionCampaignId: Option<String>,
+	#[serde(rename = "2781")]
+	pub renewalReminderSentForSubscriptionEnd: Option<DateTime>,
 	#[serde(rename = "158")]
 	pub customer: GeneratedId,
 	#[serde(rename = "159")]
@@ -756,6 +758,8 @@ pub struct CustomerInfo {
 	pub partnerManagedCustomers: Option<GeneratedId>,
 	#[serde(rename = "2770")]
 	pub revocationRequest: Option<IdTupleGenerated>,
+	#[serde(rename = "2797")]
+	pub storeNotificationLog: Option<GeneratedId>,
 }
 
 impl Entity for CustomerInfo {
@@ -2024,6 +2028,8 @@ pub struct InvoiceInfo {
 	pub discountPercentage: Option<i64>,
 	#[serde(rename = "1640")]
 	pub paymentErrorInfo: Option<PaymentErrorInfo>,
+	#[serde(rename = "2788")]
+	pub discountEligiblePlans: Vec<PlanTypeWrapper>,
 }
 
 impl Entity for InvoiceInfo {
@@ -3367,6 +3373,8 @@ pub struct PlanPrices {
 	pub planName: String,
 	#[serde(rename = "2129")]
 	pub businessPlan: bool,
+	#[serde(rename = "2789")]
+	pub bonusMonthsForYearlyPlan: i64,
 	#[serde(rename = "2127")]
 	pub planConfiguration: PlanConfiguration,
 }
@@ -5994,6 +6002,8 @@ impl Entity for AdminGroupKeyRotationGetOut {
 pub struct SurveyDataPostIn {
 	#[serde(rename = "2564")]
 	pub _format: i64,
+	#[serde(rename = "2782")]
+	pub surveyType: i64,
 	#[serde(rename = "2565")]
 	pub surveyData: SurveyData,
 }
@@ -6565,6 +6575,24 @@ impl Entity for SubscriptionRevocationServicePostIn {
 		TypeRef {
 			app: AppName::Sys,
 			type_id: TypeId::from(2771),
+		}
+	}
+}
+
+#[derive(uniffi::Record, Clone, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "testing"), derive(PartialEq, Debug))]
+pub struct PlanTypeWrapper {
+	#[serde(rename = "2784")]
+	pub _id: Option<CustomId>,
+	#[serde(rename = "2785")]
+	pub plan: i64,
+}
+
+impl Entity for PlanTypeWrapper {
+	fn type_ref() -> TypeRef {
+		TypeRef {
+			app: AppName::Sys,
+			type_id: TypeId::from(2783),
 		}
 	}
 }

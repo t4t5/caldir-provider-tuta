@@ -20,7 +20,7 @@ members = [
 ]
 
 [workspace.package]
-version = "355.260710.0"
+version = "360.260922.0"
 rust-version = "1.84.0"
 edition = "2021"
 homepage = "https://tutao.de"

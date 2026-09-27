@@ -1,6 +1,6 @@
 --- a/sdk/src/entity_client.rs
 +++ b/sdk/src/entity_client.rs
-@@ -348,20 +348,48 @@
+@@ -354,20 +354,48 @@
  	#[allow(clippy::unused_async, unused)]
  	pub async fn erase_element(
  		&self,
@@ -21,7 +21,8 @@
 -		_id: Id,
 +		type_ref: &TypeRef,
 +		id: Id,
-+	) -> Result<(), ApiCallError> {
+ 	) -> Result<(), ApiCallError> {
+-		todo!("entity client erase_list_element")
 +		self.erase_instance(type_ref, id.to_string()).await
 +	}
 +
@@ -29,8 +30,7 @@
 +		&self,
 +		type_ref: &TypeRef,
 +		id: String,
- 	) -> Result<(), ApiCallError> {
--		todo!("entity client erase_list_element")
++	) -> Result<(), ApiCallError> {
 +		let type_model = self.resolve_client_type_ref(type_ref)?;
 +		let url = format!(
 +			"{}/rest/{}/{}/{}",
@@ -55,4 +55,3 @@
  	}
  
  	async fn prepare_and_fire(
-

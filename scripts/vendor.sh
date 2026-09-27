@@ -19,12 +19,18 @@ cp -a "$checkout/tuta-sdk/rust/util" "$staging/tuta-sdk/"
 cp -a "$checkout/LICENSE.txt" "$staging/tuta-sdk/LICENSE.txt"
 
 for patch_file in "$root"/patches/*.patch; do
-  patch --directory="$staging/tuta-sdk" --strip=1 < "$patch_file"
+  patch --directory="$staging/tuta-sdk" --strip=1 --no-backup-if-mismatch < "$patch_file"
 done
 
 rm -rf "$root/vendor/tuta-sdk"
 mv "$staging/tuta-sdk" "$root/vendor/tuta-sdk"
 printf '%s\n' "$revision" > "$root/vendor/UPSTREAM_REV"
 
-echo "vendored Tuta SDK at $revision"
+# The SDK sends CARGO_PKG_VERSION as its client version, which Tuta rejects once
+# it falls too far behind, so keep the workspace version in step with upstream.
+version=$(sed -n 's/^version = "\(.*\)"$/\1/p' "$checkout/Cargo.toml" | head -n 1)
+sed -i.bak "/^\[workspace.package\]/,/^\[/ s/^version = \".*\"$/version = \"$version\"/" "$root/Cargo.toml"
+rm "$root/Cargo.toml.bak"
+
+echo "vendored Tuta SDK $version at $revision"
 
