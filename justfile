@@ -1,17 +1,19 @@
 format:
-  cargo fmt --package caldir-provider-tuta
+    cargo fmt --package caldir-provider-tuta
 
 check:
-  cargo check -p caldir-provider-tuta
-  cargo clippy -p caldir-provider-tuta --no-deps -- -D warnings
-  scripts/check-plugin-manifest.sh
+    cargo check -p caldir-provider-tuta
+    cargo clippy -p caldir-provider-tuta --no-deps -- -D warnings
+    scripts/check-plugin-manifest.sh
 
 test:
-  cargo test -p caldir-provider-tuta
+    cargo test -p caldir-provider-tuta
 
 install:
-  cargo install --path .
+    cargo install --path .
+
+uninstall:
+    cargo uninstall caldir-provider-tuta
 
 vendor checkout:
-  scripts/vendor.sh {{checkout}}
-
+    scripts/vendor.sh {{ checkout }}
