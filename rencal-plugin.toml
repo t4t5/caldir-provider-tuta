@@ -5,7 +5,7 @@ description = "Sync your Tuta calendars with renCal"
 min_rencal_version = "0.8.0"
 
 [[contributes.providers]]
-id = "tuta"
+slug = "tuta"
 name = "Tuta"
 icon = "icons/tuta.svg"
 asset = "caldir-provider-tuta-{target}.tar.gz"
