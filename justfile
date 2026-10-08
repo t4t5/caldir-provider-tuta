@@ -4,7 +4,6 @@ format:
 check:
     cargo check -p caldir-provider-tuta
     cargo clippy -p caldir-provider-tuta --no-deps -- -D warnings
-    scripts/check-plugin-manifest.sh
 
 test:
     cargo test -p caldir-provider-tuta
