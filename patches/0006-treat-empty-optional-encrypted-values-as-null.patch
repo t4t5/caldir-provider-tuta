@@ -1,0 +1,99 @@
+--- a/sdk/src/entities/entity_facade.rs
++++ b/sdk/src/entities/entity_facade.rs
+@@ -669,7 +669,7 @@
+ 		MAX_UNCOMPRESSED_INPUT_LZ4, OWNER_ENC_SESSION_KEY_FIELD, OWNER_KEY_VERSION_FIELD,
+ 	};
+ 	use crate::entities::generated::sys::CustomerAccountTerminationRequest;
+-	use crate::entities::generated::tutanota::{Mail, MailAddress};
++	use crate::entities::generated::tutanota::{CalendarEvent, Mail, MailAddress};
+ 	use crate::entities::Entity;
+ 	use crate::instance_mapper::InstanceMapper;
+ 	use crate::json_element::{JsonElement, RawEntity};
+@@ -677,6 +677,7 @@
+ 	use crate::metamodel::{AttributeId, Cardinality, ModelValue, ValueType};
+ 	use crate::type_model_provider::TypeModelProvider;
+ 	use crate::util::entity_test_utils::generate_email_entity;
++	use crate::util::test_utils::create_test_entity_dict;
+ 	use crate::{collection, ApiCallError};
+ 	use crypto_primitives::aes::{Aes256Key, InitializationVector};
+ 	use crypto_primitives::key::GenericAesKey;
+@@ -1377,6 +1378,63 @@
+ 		assert_eq!(Ok(parsed_entity), encrypted_instance);
+ 	}
+ 
++	#[test]
++	fn decrypt_empty_optional_encrypted_value_as_null() {
++		let sk = GenericAesKey::Aes256(Aes256Key::from_bytes(KNOWN_SK.as_slice()).unwrap());
++		let type_model_provider = Arc::new(TypeModelProvider::new_test(
++			Arc::new(MockRestClient::new()),
++			Arc::new(MockFileClient::new()),
++			"localhost:9000".to_string(),
++		));
++		let type_model = type_model_provider
++			.resolve_server_type_ref(&CalendarEvent::type_ref())
++			.unwrap();
++		let entity_facade = EntityFacadeImpl::new(
++			Arc::clone(&type_model_provider),
++			RandomizerFacade::from_core(rand_core::OsRng),
++		);
++		let json_serializer = JsonSerializer::new(type_model_provider.clone());
++		let encrypted = entity_facade
++			.encrypt_and_map(
++				&type_model,
++				&create_test_entity_dict::<CalendarEvent>(),
++				&sk,
++			)
++			.unwrap();
++		let mut raw_event = json_serializer
++			.serialize(&CalendarEvent::type_ref(), encrypted)
++			.unwrap();
++		let start_time_zone_id: String = type_model
++			.get_attribute_id_by_attribute_name("startTimeZone")
++			.unwrap()
++			.into();
++		raw_event.insert(
++			start_time_zone_id.clone(),
++			JsonElement::String(String::new()),
++		);
++
++		let parsed_event = json_serializer
++			.parse(&CalendarEvent::type_ref(), raw_event)
++			.unwrap();
++		let decrypted_event = entity_facade
++			.decrypt_and_map(
++				&type_model,
++				parsed_event,
++				ResolvedSessionKey {
++					session_key: sk,
++					owner_enc_session_key: vec![0, 1, 2],
++					owner_key_version: 0,
++					sender_identity_pub_key: None,
++				},
++			)
++			.unwrap();
++
++		assert_eq!(
++			Some(&ElementValue::Null),
++			decrypted_event.get(&start_time_zone_id)
++		);
++	}
++
+ 	fn map_to_string(map: &ParsedEntity) -> String {
+ 		let mut out = String::new();
+ 		let sorted_map: BTreeMap<String, ElementValue> = map.clone().into_iter().collect();
+--- a/sdk/src/json_serializer.rs
++++ b/sdk/src/json_serializer.rs
+@@ -88,6 +88,13 @@
+ 					// If the value is an empty string and not encrypted, we resolve the field to its default value.
+ 					value_type.value_type.get_default()
+ 				},
++				(Cardinality::ZeroOrOne, JsonElement::String(v))
++					if value_type.encrypted && v.is_empty() =>
++				{
++					// Tuta can return an empty string for an optional encrypted field. It is
++					// shorter than an IV, so decrypting it would fail; treat it as absent.
++					ElementValue::Null
++				},
+ 				(Cardinality::One | Cardinality::ZeroOrOne, JsonElement::String(s))
+ 					if value_type.encrypted =>
+ 				{

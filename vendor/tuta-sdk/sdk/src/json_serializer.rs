@@ -88,6 +88,13 @@ impl JsonSerializer {
 					// If the value is an empty string and not encrypted, we resolve the field to its default value.
 					value_type.value_type.get_default()
 				},
+				(Cardinality::ZeroOrOne, JsonElement::String(v))
+					if value_type.encrypted && v.is_empty() =>
+				{
+					// Tuta can return an empty string for an optional encrypted field. It is
+					// shorter than an IV, so decrypting it would fail; treat it as absent.
+					ElementValue::Null
+				},
 				(Cardinality::One | Cardinality::ZeroOrOne, JsonElement::String(s))
 					if value_type.encrypted =>
 				{

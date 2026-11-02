@@ -18,7 +18,9 @@ The three upstream crates and GPL license are under `vendor/tuta-sdk`. The local
 1. expose resumable credentials after `create_session`;
 2. preserve custom IDs on POST;
 3. implement entity DELETE;
-4. route an SDK diagnostic through logging so it cannot corrupt the provider's JSON stdout protocol.
+4. route an SDK diagnostic through logging so it cannot corrupt the provider's JSON stdout protocol;
+5. fix SDK compiler warnings;
+6. treat an empty optional encrypted value as absent, since decrypting it fails and would abort loading the whole event list.
 
 To update from a Tutanota checkout:
 
